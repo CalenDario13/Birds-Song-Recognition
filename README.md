@@ -7,4 +7,4 @@ The new_retriver.py is used to get the most common birds, thanks to the top_ten 
 
 To execute the program run the file main_birds.py, but before doing that change the paths within it.
 
-Don't touch or use data_retriver_birds
+### Don't touch or use data_retriver_birds.py
