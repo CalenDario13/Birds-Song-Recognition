@@ -2,7 +2,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 import os
-PATH_DIRECTORY = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project'
+PATH_DIRECTORY = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/'
 os.chdir(PATH_DIRECTORY)
 from new_retriver import top_ten, retriver, process_manager
 
@@ -11,7 +11,6 @@ if __name__ == '__main__':
     # Declear variables:
         
     PATH_FILE = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/birds'
-    PATH_PARQUET = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/parquet/'
     
     BASE = 'https://www.xeno-canto.org'
     
@@ -31,14 +30,16 @@ if __name__ == '__main__':
  
     # Get Data:
 
-    retr = retriver(BASE, PATH_FILE, PATH_PARQUET, TIME_LEN, QUALITY_RATE, FRAME_LEN, HOP_LEN)
+    retr = retriver(BASE, PATH_FILE, PATH_DIRECTORY, TIME_LEN, QUALITY_RATE, FRAME_LEN, HOP_LEN)
     process_manager(retr.get_data, birds_link[:5])
     process_manager(retr.get_data, birds_link[5:])
     
     # Create only one prquet:
+    print('I am creating the table')
     retr.merge_parquets()
+    print('Done!')
+    
+    # Import table and convert in pandas
+    table = pq.read_table('birds.parquet')
+    df = table.to_pandas()
    
-   # Import table and convert in pandas
-   table = pq.read_table('birds.parquet')
-   df = table.to_pandas()
-  
