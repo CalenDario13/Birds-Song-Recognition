@@ -1,0 +1,10 @@
+/species/Empidonax-alnorum
+/species/Tringa-totanus
+/species/Dendrocopos-major
+/species/Strix-aluco
+/species/Rallus-aquaticus
+/species/Amazona-farinosa
+/species/Amazilia-tzacatl
+/species/Streptopelia-decaocto
+/species/Coturnix-coturnix
+/species/Anas-platyrhynchos
