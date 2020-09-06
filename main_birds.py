@@ -2,6 +2,7 @@ import os
 PATH_DIRECTORY = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/'
 os.chdir(PATH_DIRECTORY)
 from new_retriver import top_ten, retriver, process_manager
+from preprocessing import Cleaner
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -38,8 +39,27 @@ if __name__ == '__main__':
     
     retr.merge_parquets()
     
-    
     # Import table and convert in pandas
     table = pq.read_table('birds.parquet')
     df = table.to_pandas()
-   
+    
+    # Preprocessing
+    cleaner = Cleaner(df)
+    
+    
+    
+    
+    
+    
+        
+    
+    
+       
+
+        
+                
+        
+                 
+                 
+                  
+        
