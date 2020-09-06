@@ -1,10 +1,10 @@
-import pyarrow as pa
-import pyarrow.parquet as pq
-
 import os
 PATH_DIRECTORY = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/'
 os.chdir(PATH_DIRECTORY)
 from new_retriver import top_ten, retriver, process_manager
+
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 if __name__ == '__main__':
         
@@ -35,9 +35,9 @@ if __name__ == '__main__':
     process_manager(retr.get_data, birds_link[5:])
     
     # Create only one prquet:
-    print('I am creating the table')
+    
     retr.merge_parquets()
-    print('Done!')
+    
     
     # Import table and convert in pandas
     table = pq.read_table('birds.parquet')
