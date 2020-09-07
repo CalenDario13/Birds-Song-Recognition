@@ -48,21 +48,3 @@ if __name__ == '__main__':
     # Preprocessing
     cleaner = Cleaner(df)
     
-    
-    
-    
-    
-    
-        
-    
-    
-       
-
-        
-                
-        
-                 
-                 
-                  
-        
->>>>>>> 782ac8e1f16a055d4fbae402f900fa7f8b01dbd3
