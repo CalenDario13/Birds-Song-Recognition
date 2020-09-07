@@ -2,7 +2,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 import os
-PATH_DIRECTORY = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project'
+PATH_DIRECTORY = '/home/lorenzo/Scrivania/Birds-Song-Recognition/'
 os.chdir(PATH_DIRECTORY)
 from new_retriver import top_ten, retriver, process_manager
 
@@ -10,16 +10,16 @@ if __name__ == '__main__':
         
     # Declear variables:
         
-    PATH_FILE = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/birds'
-    PATH_PARQUET = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/parquet/'
-    
+    PATH_FILE = '/home/lorenzo/Scrivania/Birds-Song-Recognition/birds'
+    #PATH_PARQUET = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/parquet/'
+
     BASE = 'https://www.xeno-canto.org'
-    
+
     TIME_LEN = 5
     QUALITY_RATE = 22050
     FRAME_LEN = 1024
     HOP_LEN = 512
- 
+
     # Get birds with more  recordings:
     if os.path.exists(PATH_FILE + '.txt'):
         with open(PATH_FILE + '.txt', 'r') as f:
@@ -28,17 +28,16 @@ if __name__ == '__main__':
     else:
         top = top_ten(BASE, PATH_FILE)   
         birds_link = top.top_birds()
- 
+
     # Get Data:
 
-    retr = retriver(BASE, PATH_FILE, PATH_PARQUET, TIME_LEN, QUALITY_RATE, FRAME_LEN, HOP_LEN)
+    retr = retriver(BASE, PATH_FILE, PATH_DIRECTORY, TIME_LEN, QUALITY_RATE, FRAME_LEN, HOP_LEN)
     process_manager(retr.get_data, birds_link[:5])
     process_manager(retr.get_data, birds_link[5:])
-    
+
     # Create only one prquet:
     retr.merge_parquets()
-   
-   # Import table and convert in pandas
-   table = pq.read_table('birds.parquet')
-   df = table.to_pandas()
-  
+
+    # Import table and convert in pandas
+    table = pq.read_table('birds.parquet')
+    df = table.to_pandas()

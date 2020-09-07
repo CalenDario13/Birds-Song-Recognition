@@ -333,8 +333,7 @@ class retriver():
         my_schema = pa.schema(fields)
         '''
         #schema = my_schema, in froma_pandas
-        table = pa.Table.from_pandas(df,  preserve_index = False,
-                                     nthreads = df.shape[1])
+        table = pa.Table.from_pandas(df,  preserve_index = False)
         pq.write_table(table, path_parquet_bird)
     
     def get_data(self, link_path):
@@ -385,13 +384,13 @@ class retriver():
             # Adjust DF:
             
             chunk.drop(idx_remove, axis = 0, inplace = True)
-            chunk.drop(['Unamed','Common name / Scientific', 'Country', 'Length', 'Recordist', 'Remarks', 'Actions'], 
+            chunk.drop(['Unamed','Common name / Scientific', 'Location', 'Length', 'Recordist', 'Remarks', 'Actions'], 
                        axis = 1, inplace = True)
             chunk['common_name'] = common
             chunk['scientific_name'] = scientific
             
-            chunk.columns = ['date', 'time', 'location', 'elevetaion', 'type', 'id', 'common_name', 'scientific_name']
-            chunk = chunk[['id', 'common_name', 'scientific_name', 'date', 'time', 'location', 'elevetaion', 'type']]
+            chunk.columns = ['date', 'time', 'country', 'elevetaion', 'type', 'id', 'common_name', 'scientific_name']
+            chunk = chunk[['id', 'common_name', 'scientific_name', 'date', 'time', 'country', 'elevetaion', 'type']]
             
             chunk = chunk.merge(audio_df, how = 'inner', on = 'id')
             
