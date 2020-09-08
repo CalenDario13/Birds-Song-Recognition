@@ -40,15 +40,15 @@ if __name__ == '__main__':
     retr.merge_parquets()
     
     # Import table and convert in pandas
+
     table = pq.read_table('birds.parquet')
     df = table.to_pandas()
-    
+
     # Preprocessing
     cleaner = Cleaner(df)
+    d = cleaner.add_type_columns()
     
-    
-    
-    
+
     
     
         

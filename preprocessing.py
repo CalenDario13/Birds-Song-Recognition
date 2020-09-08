@@ -71,7 +71,7 @@ class Cleaner():
         
         type_df = pd.DataFrame.from_dict(tags)
         self.df = pd.concat([self.df.iloc[:,0:7], type_df, self.df.iloc[:,8:]], axis = 1)
-        
+        return self.df
         
         
         
