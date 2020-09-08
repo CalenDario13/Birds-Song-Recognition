@@ -332,6 +332,7 @@ class retriver():
         my_schema = pa.schema(fields)
         '''
         #schema = my_schema, in froma_pandas
+
         table = pa.Table.from_pandas(df,  preserve_index = False, nthreads = df.shape[1])
         pq.write_table(table, path_parquet_bird)
     
