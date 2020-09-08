@@ -1,7 +1,5 @@
+from header import PATH_DIRECTORY, PATH_FILE
 import os
-
-PATH_DIRECTORY = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/'
-
 os.chdir(PATH_DIRECTORY)
 from new_retriver import top_ten, retriver, process_manager
 from preprocessing import Cleaner
@@ -13,7 +11,6 @@ if __name__ == '__main__':
         
     # Declear variables:
         
-    PATH_FILE = '/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/birds'
     BASE = 'https://www.xeno-canto.org'
 
     TIME_LEN = 5
