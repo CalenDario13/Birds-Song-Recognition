@@ -3,3 +3,4 @@ paper
 parquet
 header.py
 __pycache__
+.vscode
