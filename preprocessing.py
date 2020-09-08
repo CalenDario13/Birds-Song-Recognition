@@ -4,7 +4,8 @@ from collections import defaultdict
 import math
 from datetime import datetime
 from geopy.exc import GeocoderTimedOut 
-from geopy.geocoders import Nominatim 
+from geopy.geocoders import Nominatim
+from tqdm import tqdm
 
 
 class Sun:
@@ -172,7 +173,7 @@ class Cleaner():
     def add_type_columns(self):
         
         tags = defaultdict(list)
-        for row in self.df['type']:
+        for row in tqdm(self.df['type'], desc = 'Generate type columns'):
             
             # Add the tag to the corresponding column lst:
             ca, se, st, sp = self.clean_type(row)
@@ -217,7 +218,7 @@ class Cleaner():
         longitude = [] 
         latitude = [] 
         d = defaultdict(list)
-        for coun in (self.df["country"]): 
+        for coun in tqdm(self.df["country"], desc = 'Calculate lat-long'): 
             if coun in list(d.keys()):
                 latitude.append(d[coun][0])
                 longitude.append(d[coun][1])
@@ -253,7 +254,7 @@ class Cleaner():
     def calc_gio_not(self):
         gio_not = []
         sun = Sun()
-        for oss in self.df.iloc[:,0:13].itertuples():
+        for oss in tqdm(self.df.iloc[:,0:13].itertuples(), desc = 'Calculate day-night', total=len(self.df)):
             date = oss.date
             time = oss.time
             lon = oss.longitude
@@ -324,7 +325,7 @@ class Cleaner():
 
     def calc_season(self):
         season_lis = []
-        for oss in self.df.iloc[:,0:14].itertuples():
+        for oss in tqdm(self.df.iloc[:,0:14].itertuples(), desc = 'Calculate Season', total=len(self.df)):
             date = oss.date
             lat = oss.latitude
             e = self.emisphere(lat)

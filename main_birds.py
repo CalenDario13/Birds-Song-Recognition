@@ -41,13 +41,15 @@ if __name__ == '__main__':
     retr.merge_parquets()
 
     # Import table and convert in pandas
-
+    print('Start loading df\n...')
     table = pq.read_table('birds.parquet')
     df = table.to_pandas()
-
+    print('Done!')
+    
     # Preprocessing
     cleaner = Cleaner(df)
-    df = cleaner.add_type_columns()
+    df = cleaner.generate_final_db()
+
     
 
     
