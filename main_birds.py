@@ -44,16 +44,13 @@ if __name__ == '__main__':
     table = pq.read_table('birds.parquet')
     df = table.to_pandas()
     print('Done!')
-    df['background']
-    '''
+    
+    
     # Preprocessing
     cleaner = Cleaner(df)
     df = cleaner.generate_final_db()
-    '''
-    
 
-    
-    
+  
         
     
     
