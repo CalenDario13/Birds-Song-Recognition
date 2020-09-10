@@ -4,7 +4,7 @@ from collections import defaultdict
 import math
 from datetime import datetime
 from tqdm import tqdm
-
+import librosa
 
 class Sun:
 
@@ -116,7 +116,6 @@ class Sun:
 
         return v
 
-
 class Cleaner():
     
     def __init__(self, df):
@@ -125,6 +124,7 @@ class Cleaner():
         
     def transform_columns(self):
         
+        self.df.elevetaion = self.df.elevetaion.apply(lambda x: int(x) if (x and x.isdigit()) else np.nan)
         self.df.latitude = self.df.latitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
         self.df.longitude = self.df.longitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
         is_alone = self.df.background.apply(lambda x: 0 if not x else 1) # alone = 0
@@ -294,10 +294,66 @@ class Cleaner():
         self.calc_season()
         return self.df
     
+class Audio_Processing():
+    
+    def __init__(self, df, quality_rate, hop_length):
+        
+        self.df = df.iloc[:,17:]
+        self.df = self.df.fillna(0)
+        
+        self.other_df = df.iloc[:,:17]
 
+        self.tempo = [i/22050 for i in range(df.shape[1])]
+        self.dt = 1/quality_rate
+        self.quality_rate = quality_rate
+        self.hop_length = hop_length
+        
+    def fft_filter(self, signal):
+
+        n = len(self.tempo) 
+        
+        # Calculate Power Spectrum:  
+        fhat = np.fft.fft(signal, n)
+        PSD = fhat * np.conj(fhat) / n 
+        L = np.arange(1, np.floor(n/2), dtype = int) 
         
         
+        # Get info to use to filter:
+        freq = (1/(self.dt * n)) * np.arange(n)
+        av, sd = PSD[L].mean(), PSD[L].std() # calcola avg e sd dei PSD
         
+        # Filter the signal:
+        indices = (PSD > av + sd) & (freq >= 4500) # Lista di filtri
+        fhat_to_inverse = fhat * indices # Filtraggio fourier
+        f_filt = np.fft.ifft(fhat_to_inverse) # Trasformata inversa (da frequenze a tempo)
+    
+        return f_filt 
+      
+    def get_mel(self, rows):
+        
+        # Generate MEL and Delta:
+        signal = np.array(rows, dtype = np.float32) 
+        signal = np.absolute(self.fft_filter(signal)) 
+        mfcc = librosa.feature.mfcc(y = signal, sr = self.quality_rate, n_fft = 2048,
+                                    hop_length = self.hop_length, n_mfcc = 20) 
+        mfcc_delta = librosa.feature.delta(mfcc) 
+        
+        # Flatten and concatenate:
+        mfcc = mfcc.flatten('C') 
+        mfcc_delta = mfcc_delta.flatten('C')
+        mfcc_concat = np.concatenate([mfcc, mfcc_delta]) 
+
+        return mfcc_concat
+        
+    def transform_df(self):
+        
+        tqdm.pandas()
+        df = self.df.progress_apply(lambda row: self.get_mel(row), axis = 1, result_type = 'expand')
+        df.columns = ['mel_' + str(i) for i in range(df.shape[1])]
+        
+        final = pd.concat([self.other_df, df], axis = 1)
+  
+        return final
         
 
 

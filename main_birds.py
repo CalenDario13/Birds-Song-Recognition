@@ -1,11 +1,11 @@
-from header import PATH_DIRECTORY, PATH_FILE
 import os
-os.chdir(PATH_DIRECTORY)
+os.chdir('/Users/dario/Google Drive/DS/First Year - Secon Semester/SL/final_project/')
 import time
-from new_retriver import top_ten, retriver, process_manager
-from preprocessing import Cleaner
 
-import pyarrow as pa
+from header import PATH_DIRECTORY, PATH_FILE
+from new_retriver import top_ten, retriver, process_manager
+from preprocessing import Cleaner, Audio_Processing, multi_df
+
 import pyarrow.parquet as pq
 
 if __name__ == '__main__':
@@ -50,14 +50,12 @@ if __name__ == '__main__':
 
     cleaner = Cleaner(df)
     df = cleaner.generate_final_db()
-
     
-    
-       
+    process = Audio_Processing(df, QUALITY_RATE, HOP_LEN)
 
-        
-                
-        
+    mel = multi_df(process.transform_df, df)
+ 
+    df.columns[:18]
                  
                  
 
