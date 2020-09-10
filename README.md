@@ -5,6 +5,8 @@ The files are retrived from the https://www.xeno-canto.org/, an opensource websi
 
 The new_retriver.py is used to get the most common birds, thanks to the top_ten class and download the files thanks to the class retriver.
 
-To execute the program run the file main_birds.py, but before doing that change the paths within it.
+To execute the program run the file main_birds.py.
+
+Header.py contains the paths, download it and change the paths inside with you own ones. This file won't be updated.
 
 ### Don't touch or use data_retriver_birds.py

@@ -1,6 +1,7 @@
 from header import PATH_DIRECTORY, PATH_FILE
 import os
 os.chdir(PATH_DIRECTORY)
+import time
 from new_retriver import top_ten, retriver, process_manager
 from preprocessing import Cleaner
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
 
     retr = retriver(BASE, PATH_FILE, PATH_DIRECTORY, TIME_LEN, QUALITY_RATE, FRAME_LEN, HOP_LEN)
     process_manager(retr.get_data, birds_link[:5])
+    time.sleep(60)
     process_manager(retr.get_data, birds_link[5:])
 
     # Create only one prquet:
@@ -43,15 +45,13 @@ if __name__ == '__main__':
     df = table.to_pandas()
     print('Done!')
     
+    
     # Preprocessing
+    new_df = df.copy()
     cleaner = Cleaner(df)
     df = cleaner.generate_final_db()
-
     
 
-    
-    
-        
     
     
        

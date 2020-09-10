@@ -3,8 +3,6 @@ import numpy as np
 from collections import defaultdict
 import math
 from datetime import datetime
-from geopy.exc import GeocoderTimedOut 
-from geopy.geocoders import Nominatim
 from tqdm import tqdm
 
 
@@ -119,15 +117,19 @@ class Sun:
         return v
 
 
-
-
 class Cleaner():
     
     def __init__(self, df):
         
         self.df = df
         
-    
+    def transform_columns(self):
+        
+        self.df.latitude = self.df.latitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
+        self.df.longitude = self.df.longitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
+        is_alone = self.df.background.apply(lambda x: 0 if not x else 1) # alone = 0
+        self.df.insert(9, 'is_alone', is_alone)
+        
     def clean_type(self, row):
         
         # Define the columns domain:
@@ -145,7 +147,7 @@ class Cleaner():
         st = []
         sp = []
         
-        for tag in row:
+        for tag in row.split(','):
             tag = tag.strip()
             if tag in calls and tag != 'uncertain':
                 ca.append(tag)
@@ -161,7 +163,7 @@ class Cleaner():
     def transform_lst(self, lst):
         
         if len(lst) > 1:
-            new = ', '.join(lst)
+            new = np.NaN
             return new
         elif len(lst) == 1:
             new = lst[0]
@@ -189,112 +191,61 @@ class Cleaner():
             tags['special'].append(sp)
         
         type_df = pd.DataFrame.from_dict(tags)
-        self.df = pd.concat([self.df.iloc[:,0:7], type_df, self.df.iloc[:,8:]], axis = 1)
-
-    
-    # function to find the coordinate 
-    # of a given city  
-    def findGeocode(self,city): 
-        
-        # try and catch is used to overcome 
-        # the exception thrown by geolocator 
-        # using geocodertimedout   
-        try: 
-            
-            # Specify the user_agent as your 
-            # app name it should not be none 
-            geolocator = Nominatim(user_agent="your_app_name") 
-            
-            return geolocator.geocode(city) 
-        
-        except GeocoderTimedOut: 
-            
-            return self.findGeocode(city) 
-
-    def lat_lon(self):
-    # declare an empty list to store 
-    # latitude and longitude of values  
-    # of city column 
-        longitude = [] 
-        latitude = [] 
-        d = defaultdict(list)
-        for coun in tqdm(self.df["country"], desc = 'Calculate lat-long'): 
-            if coun in list(d.keys()):
-                latitude.append(d[coun][0])
-                longitude.append(d[coun][1])
-            else:
-                loc = self.findGeocode(coun) 
-
-                
-                if loc:   
-                    # coordinates returned from  
-                    # function is stored into 
-                    # two separate list 
-                    latitude.append(loc.latitude) 
-                    longitude.append(loc.longitude) 
-                    d[coun].append(loc.latitude)
-                    d[coun].append(loc.longitude)
-                
-                # if coordinate for a city not 
-                # found, insert "NaN" indicating  
-                # missing value  
-                else: 
-                    latitude.append(np.nan) 
-                    longitude.append(np.nan)
-                    d[coun].append(loc.latitude)
-                    d[coun].append(loc.longitude) 
-        #Showing the output produced as dataframe.
-
-
-        # now add this column to dataframe 
-        self.df.insert(6,"longitude",longitude) 
-        self.df.insert(7,"latitude",latitude)
+        self.df = pd.concat([self.df.iloc[:,0:10], type_df, self.df.iloc[:,11:]], axis = 1)
 
 
     def calc_gio_not(self):
         gio_not = []
         sun = Sun()
-        for oss in tqdm(self.df.iloc[:,0:13].itertuples(), desc = 'Calculate day-night', total=len(self.df)):
+        for oss in tqdm(self.df.iloc[:,0:15].itertuples(), desc = 'Calculate day-night', total=len(self.df)):
+            
             date = oss.date
             time = oss.time
             lon = oss.longitude
             lat = oss.latitude
-            coords = {'longitude' : lon, 'latitude' : lat }
-            d_alb = sun.calcSunTime(date,coords,True)
-            ore_alb,min_alb = d_alb['hr'],d_alb['min']
-
-            d_tram = sun.calcSunTime(date,coords,False)
-            ore_tram,min_tram = d_tram['hr'],d_tram['min']
-            if time == '?':
-                gio_not.append(np.NaN)
-            else:
-                time_ore,time_min = time.split(":")
-
-                if time_min == '00am':
-                    time_min = '00'
-                elif time_min == '30am':
-                    time_min = '30'
-                elif time_min == '30pm':
-                    time_min = '30'
-
-                time_ore = int(time_ore)
-                time_min = int(time_min)
-
-                if time_ore < ore_tram and time_ore > ore_alb:
-                    gio_not.append('giorno')
-                elif time_ore == ore_alb:
-                    if time_min >= min_alb:
-                        gio_not.append('giorno')
-                    else:
-                        gio_not.append('notte')
-                elif time_ore == ore_tram:
-                    if time_min < min_tram:
-                        gio_not.append('giorno')
-                    else:
-                        gio_not.append('notte')
+            
+            try:
+     
+                coords = {'longitude' : lon, 'latitude' : lat }
+                d_alb = sun.calcSunTime(date,coords,True)
+                ore_alb,min_alb = d_alb['hr'],d_alb['min']
+    
+                d_tram = sun.calcSunTime(date,coords,False)
+                ore_tram,min_tram = d_tram['hr'],d_tram['min']
+                if time == '?':
+                    gio_not.append(np.NaN)
                 else:
-                    gio_not.append('notte')
-        self.df.insert(8,"gio_not",gio_not)
+                    time_ore,time_min = time.split(":")
+    
+                    if time_min == '00am':
+                        time_min = '00'
+                    elif time_min == '30am':
+                        time_min = '30'
+                    elif time_min == '30pm':
+                        time_min = '30'
+    
+                    time_ore = int(time_ore)
+                    time_min = int(time_min)
+    
+                    if time_ore < ore_tram and time_ore > ore_alb:
+                        gio_not.append('giorno') # GIORNO
+                    elif time_ore == ore_alb:
+                        if time_min >= min_alb:
+                            gio_not.append('giorno')
+                        else:
+                            gio_not.append('notte') # NOTTE
+                    elif time_ore == ore_tram:
+                        if time_min < min_tram:
+                            gio_not.append('giorno')
+                        else:
+                            gio_not.append('notte')
+                    else:
+                        gio_not.append('notte')
+            except:
+          
+                gio_not.append(np.NaN)
+
+        self.df.insert(9,"gio_not",gio_not)
     
 
     def emisphere(self,lat):
@@ -322,22 +273,24 @@ class Cleaner():
             s = (s + 2) % 3
         return s
 
-
     def calc_season(self):
         season_lis = []
-        for oss in tqdm(self.df.iloc[:,0:14].itertuples(), desc = 'Calculate Season', total=len(self.df)):
+        for oss in tqdm(self.df.iloc[:,0:16].itertuples(), desc = 'Calculate Season', total=len(self.df)):
             date = oss.date
             lat = oss.latitude
-            e = self.emisphere(lat)
-            s = self.season(date,e)
-            season_lis.append(s)
-        self.df.insert(9,"season",season_lis)
+            if not lat:
+                season_lis.append(np.nan)
+            else:
+                e = self.emisphere(lat)
+                s = self.season(date,e)
+                season_lis.append(s)
+        self.df.insert(10,"season",season_lis)
 
     def generate_final_db(self):
         self.add_type_columns()
-        self.lat_lon()
-        self.calc_gio_not()
-        self.calc_season()
+        self.transform_columns()
+        #self.calc_gio_not()
+        #self.calc_season()
         return self.df
     
 

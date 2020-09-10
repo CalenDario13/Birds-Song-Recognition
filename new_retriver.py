@@ -4,6 +4,7 @@ import heapq
 import os.path
 import warnings
 from tqdm import tqdm
+from collections import defaultdict
 import re
 
 import threading
@@ -157,7 +158,7 @@ class retriver():
     def connect(self, url):
         
        session = requests.Session() 
-       retry = Retry(total = 10000000, backoff_factor = 2)
+       retry = Retry(total = 100000000, backoff_factor = 2)
        adapter = HTTPAdapter(max_retries = retry)
        session.mount('http://', adapter)
        session.mount('https://', adapter)
@@ -276,7 +277,53 @@ class retriver():
             
             xcid = ''.join(['XC', re.search(r'\d+', url)[0]])
             audio_lst.append([xcid] + [np.nan for _ in range(self.time_len * self.quality_rate)])
+    
+    @thread_manager        
+    def get_gps_and_back(self, url_gps, gps_back_dic):
+        
+        data = self.connect(url_gps)
+        soup = bs(data, 'html.parser')
+        content_table = soup.find('table', {'class': 'key-value'})
+        rows = content_table.find_all('tr')
+        
+        found = 0
+        for el in rows:
+           
+            try:
+                if el.next.text == 'Latitude':
+                    gps_back_dic['latitude'].append(el.next.next.next.text)
+                    found +=1
+                elif el.next.text == 'Longitude':
+                    gps_back_dic['longitude'].append(el.next.next.next.text)
+                    found+=1
+                elif el.next.text == 'Background':
+                    backs = el.find('td', {'valign':'top'})
+                    try:
+                        if backs.text.strip() != 'none':
+                            lis = el.find_all('li')
+                            birds = ''
+                            for li in lis:
+                                common_n = li.a.text
+                                scientific_n = li.find('span', {'class':'sci-name'}).text
+                                
+                                b = ' --- '.join([common_n.strip(), scientific_n.strip()])
+                                if birds:
+                                    birds = birds + '; ' + b
+                                else:
+                                    birds = b
+                            gps_back_dic['background'].append(birds)
+                        else:
+                            gps_back_dic['background'].append(np.nan)
+                    except:
+                        gps_back_dic['background'].append(np.nan)       
+            except:
+                continue
             
+        
+        idn = re.search(r'(?<=\/)\d+', url_gps)[0]
+        xc_id = ''.join(['XC', idn])
+        gps_back_dic['id'].append(xc_id)
+    
     def clean_rows(self, df):
         
         idx_remove = []
@@ -291,9 +338,8 @@ class retriver():
                 seen = 'no'
                 
             score = row.Actions
-            uncertain = bool(re.search(r'\[also\]', row.Remarks))
             
-            if seen == 'yes' and (row._2 != '(?) Identity unknown' or row._2 != 'Soundscape') and (score == 'A' or score == 'B' or not score) and row.Length < 120 and not uncertain:
+            if seen == 'yes' and (row._2 != '(?) Identity unknown' or row._2 != 'Soundscape') and (score == 'A' or score == 'B' or not score) and row.Length < 120:
                 
                 # Split common name from scientific:
                 
@@ -310,7 +356,7 @@ class retriver():
                 xc_id = row._13
                 reg = re.search(r'\d+', xc_id)
                 xc_num = reg[0]
-                url_sound = ''.join([self.base, '/', xc_num, '/download'])
+                url_sound = ''.join([self.base, '/', xc_num])
                 urls.append(url_sound)
             
             else:
@@ -322,16 +368,6 @@ class retriver():
     def to_parquet(self, df, name):
         
         path_parquet_bird = ''.join([self.path_parquet, name, '.parquet'])
-
-        '''
-        fields = [pa.field('id', pa.string()), pa.field('common_name', pa.string()), 
-                  pa.field('scientific_name', pa.string()), pa.field('date', pa.string()),
-                  pa.field('time', pa.string()), pa.field('location', pa.string()),
-                  pa.field('elevetaion', pa.int32()), pa.field('type', pa.string())]
-        fields.extend([pa.field('wf_' + str(n), pa.float32()) for n in range(110250)])
-        my_schema = pa.schema(fields)
-        '''
-        #schema = my_schema, in froma_pandas
 
         table = pa.Table.from_pandas(df,  preserve_index = False, nthreads = df.shape[1])
         pq.write_table(table, path_parquet_bird)
@@ -370,16 +406,27 @@ class retriver():
             idx_remove, common, scientific, urls = self.clean_rows(chunk)    
             
             # Download audio and get spectrogram:
-             
+            
+
             audio_lst = []
-            threads = []
+            gps_back_dic = defaultdict(list)
+            threads_audio = []
+            threads_gps = []
             for url_download in urls:
-                t = self.get_song(url_download, audio_lst)
-                threads.append(t)
-            for process in threads:
-                process.join()
+                url_download_audio = ''.join([url_download, '/download'])
+                t_a = self.get_song(url_download_audio, audio_lst)
+                t_g = self.get_gps_and_back(url_download, gps_back_dic)
+                threads_audio.append(t_a)
+                threads_gps.append(t_g)
+            for process_a, process_g in zip(threads_audio, threads_gps):
+                process_a.join()
+                process_g.join()
 
             audio_df = pd.DataFrame(audio_lst, columns = ['id'] +['wf_' + str(i) for i in range(self.time_len * self.quality_rate)])
+            if len(gps_back_dic) == 0:
+                gps_df = pd.DataFrame(columns = ['id', 'latitude', 'longitude', 'background'])
+            else:
+                gps_df = pd.DataFrame.from_dict(gps_back_dic)       
             
             # Adjust DF:
             
@@ -390,7 +437,9 @@ class retriver():
             chunk['scientific_name'] = scientific
             
             chunk.columns = ['date', 'time', 'country', 'elevetaion', 'type', 'id', 'common_name', 'scientific_name']
-            chunk = chunk[['id', 'common_name', 'scientific_name', 'date', 'time', 'country', 'elevetaion', 'type']]
+            chunk = chunk.merge(gps_df, how = 'inner', on = 'id')
+            chunk = chunk[['id', 'common_name', 'scientific_name', 'date', 'time', 'country', 
+                           'latitude', 'longitude', 'elevetaion', 'background', 'type']]
             
             chunk = chunk.merge(audio_df, how = 'inner', on = 'id')
             
@@ -427,5 +476,8 @@ class retriver():
         final_table = pa.concat_tables(pq_tables)
         pq.write_table(final_table, ''.join([self.path_file, '.parquet']), 
                        use_dictionary = True, compression='snappy')
-        
-       
+
+
+
+
+
