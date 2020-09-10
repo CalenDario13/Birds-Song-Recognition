@@ -47,10 +47,9 @@ if __name__ == '__main__':
     
     
     # Preprocessing
-    new_df = df.copy()
+
     cleaner = Cleaner(df)
     df = cleaner.generate_final_db()
-    
 
     
     

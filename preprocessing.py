@@ -129,7 +129,8 @@ class Cleaner():
         self.df.longitude = self.df.longitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
         is_alone = self.df.background.apply(lambda x: 0 if not x else 1) # alone = 0
         self.df.insert(9, 'is_alone', is_alone)
-        
+         
+
     def clean_type(self, row):
         
         # Define the columns domain:
@@ -289,8 +290,8 @@ class Cleaner():
     def generate_final_db(self):
         self.add_type_columns()
         self.transform_columns()
-        #self.calc_gio_not()
-        #self.calc_season()
+        self.calc_gio_not()
+        self.calc_season()
         return self.df
     
 
