@@ -4,7 +4,8 @@ import time
 
 from header import PATH_DIRECTORY, PATH_FILE
 from new_retriver import top_ten, retriver, process_manager
-from preprocessing import Cleaner, Audio_Processing, multi_df
+from preprocessing import Cleaner, Audio_Processing
+from model import Classifier
 
 import pyarrow.parquet as pq
 
@@ -18,6 +19,11 @@ if __name__ == '__main__':
     QUALITY_RATE = 22050
     FRAME_LEN = 1024
     HOP_LEN = 512
+    
+    BINS = 70
+    LOW_CUT = 1000
+    HIGH_CUT = 50000
+    
 
     # Get birds with more  recordings:
     if os.path.exists(PATH_FILE + '.txt'):
@@ -45,17 +51,13 @@ if __name__ == '__main__':
     df = table.to_pandas()
     print('Done!')
     
-    
     # Preprocessing
 
     cleaner = Cleaner(df)
     df = cleaner.generate_final_db()
     
-    process = Audio_Processing(df, QUALITY_RATE, HOP_LEN)
-
-    mel = multi_df(process.transform_df, df)
- 
-    df.columns[:18]
-                 
-                 
-
+    audio_processing = Audio_Processing(df, QUALITY_RATE, HOP_LEN, BINS, LOW_CUT, HIGH_CUT)
+    new_df = audio_processing.transform_df()
+    
+    classifier = Classifier(new_df)
+    classifier.evaluate_model()
