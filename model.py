@@ -27,14 +27,14 @@ class Classifier():
             binn = 'alta'
             
         return binn
- 
+    
     def prepare_df(self):
         
         # Fill NaN:
-        dummy_df = self.df[['country', 'gio_not', 'season']]
+        dummy_df = self.df[['country','gio_not', 'season', 'call', 'sex', 'stage', 'special']]
         imp_mode = SimpleImputer(missing_values = np.NaN, strategy  ='most_frequent')
         dummy_df = imp_mode.fit_transform(dummy_df)   
-        dummy_df = pd.DataFrame(dummy_df, columns = ['country', 'gio_not', 'season'])
+        dummy_df = pd.DataFrame(dummy_df, columns = ['country','gio_not', 'season', 'call', 'sex', 'stage', 'speciale'])
         
         other_df = self.df[['latitude', 'longitude', 'elevetaion']]        
         imp_mean = SimpleImputer(missing_values=np.nan, strategy = 'mean')
@@ -50,14 +50,16 @@ class Classifier():
         
         dummy_df = pd.get_dummies(dummy_df, drop_first = True)
         
-        # Scale bins:
-            
+        # Scaling:
+       
         scale_freq = scale(self.df.iloc[:,17: -1], axis = 1)
         freq_df = pd.DataFrame(scale_freq)
+        other_df = scale(other_df)
+        other_df = pd.DataFrame(other_df, columns = ['latitude', 'longitude'])
         
         # Combine everything:
  
-        self.df = pd.concat([dummy_df, freq_df, self.df[['centroids']]], axis = 1)
+        self.df = pd.concat([dummy_df, other_df, freq_df, self.df[['centroids']]], axis = 1)
         
         # Split df:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.df, self.labels, 
@@ -68,12 +70,17 @@ class Classifier():
         
         self.prepare_df()
         
-        C_vals = [14]
+        C_vals = [5,10,20,30,40,50,60,70,80,90,100,200,300,400,500,600]
 
         for c in C_vals:
             clf = SVC(C = c)
             score = cross_val_score(clf, self.X_train, self.y_train, 
                                     n_jobs = -1, scoring = 'accuracy', cv = 10)
-            print(np.mean(score))
+            print(np.mean(score), c)
     
-       
+    def test_model(self):
+        self.prepare_df()
+        clf = SVC(C = 20)
+        clf.fit(self.X_train, self.y_train)
+        print(clf.score(self.X_test, self.y_test))
+ 

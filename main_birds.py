@@ -54,9 +54,9 @@ if __name__ == '__main__':
     # Preprocessing
 
     cleaner = Cleaner(df)
-    df = cleaner.generate_final_db()
+    new_df = cleaner.generate_final_db()
     
-    audio_processing = Audio_Processing(df, QUALITY_RATE, HOP_LEN, BINS, LOW_CUT, HIGH_CUT)
+    audio_processing = Audio_Processing(new_df, QUALITY_RATE, HOP_LEN, BINS, LOW_CUT, HIGH_CUT)
     new_df = audio_processing.transform_df()
     
     classifier = Classifier(new_df)

@@ -127,8 +127,8 @@ class Cleaner():
     def transform_columns(self):
         
         self.df.elevetaion = self.df.elevetaion.apply(lambda x: int(x) if (x and x.isdigit()) else np.nan)
-        self.df.latitude = self.df.latitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
-        self.df.longitude = self.df.longitude.apply(lambda x: np.nan if x == 'Not specified' else float(x))
+        self.df.latitude = self.df.latitude.apply(lambda x: np.nan if x == 'Not specified' else float(x) * np.pi/180)
+        self.df.longitude = self.df.longitude.apply(lambda x: np.nan if x == 'Not specified' else float(x) * np.pi/180)
         is_alone = self.df.background.apply(lambda x: 'yes' if not x else 'no') # alone = 0
         self.df.insert(9, 'is_alone', is_alone)
         
