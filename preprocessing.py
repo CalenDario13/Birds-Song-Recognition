@@ -412,7 +412,7 @@ class Audio_Processing():
             zcrs = pd.DataFrame(scale(zcrs, axis=1))
             self.df = self.return_ffts(ffts_len)
             final = pd.DataFrame(self.bin_data())
-            final['centroids'] = scale(np.apply_along_axis(self.eval_spectral_centroid, 1, self.df))
+            final['centroids'] = np.apply_along_axis(self.eval_spectral_centroid, 1, self.df)
             final = pd.concat([self.other_df, final, zcrs], axis = 1)
             
         return final
