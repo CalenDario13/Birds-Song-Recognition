@@ -308,6 +308,10 @@ class Audio_Processing():
     def __init__(self, df, quality_rate, hop_length, bins, low_cut, high_cut):
         
         self.df = df.iloc[:,17:]
+        is_nan = self.df.isnull()
+        nan_rows = is_nan.all(axis = 1)
+        self.df = self.df[[not i for i in nan_rows]]
+        self.df = self.df.fillna(0)
         self.other_df = df.iloc[:,:17]
 
         self.tempo = [i/22050 for i in range(df.shape[1])]
@@ -341,7 +345,6 @@ class Audio_Processing():
       
     def get_mel(self, rows):
         
-        self.df = self.df.fillna(0)
         # Generate MEL and Delta:
         signal = np.array(rows, dtype = np.float32) 
         signal = np.absolute(self.fft_filter(signal)) 
@@ -397,6 +400,7 @@ class Audio_Processing():
             return binned_data
     
     def transform_df(self, mel = False):
+        
         if mel:
             tqdm.pandas()
             df = self.df.progress_apply(lambda row: self.get_mel(row), axis = 1, result_type = 'expand')
@@ -408,10 +412,12 @@ class Audio_Processing():
             
             ffts_len = self.df.shape[1]
             self.df = self.return_ffts(ffts_len)
-            final = pd.DataFrame(self.bin_data())
+            final = self.bin_data()
+            final = scale(final, axis = 1)
+            final = pd.DataFrame(final, columns = ['bin' + str(i) for i in range(final.shape[1])])
             final['centroids'] = scale(np.apply_along_axis(self.eval_spectral_centroid, 1, self.df))
             final = pd.concat([self.other_df, final], axis = 1)
-            
+         
         return final
         
 

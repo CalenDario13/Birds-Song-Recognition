@@ -24,7 +24,7 @@ if __name__ == '__main__':
     LOW_CUT = 1000
     HIGH_CUT = 50000
     
-
+    
     # Get birds with more  recordings:
     if os.path.exists(PATH_FILE + '.txt'):
         with open(PATH_FILE + '.txt', 'r') as f:
@@ -61,3 +61,4 @@ if __name__ == '__main__':
     
     classifier = Classifier(new_df)
     classifier.evaluate_model()
+    
