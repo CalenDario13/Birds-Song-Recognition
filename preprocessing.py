@@ -409,11 +409,6 @@ class Audio_Processing():
             final = pd.concat([self.other_df, df], axis = 1)
             
         else:
-            '''
-            zcrs = np.apply_along_axis(lambda x: librosa.feature.spectral_rolloff(x, n_fft=2048,hop_length=2048), 1, self.df)
-            zcrs = zcrs.reshape(1366, zcrs.shape[2])
-            zcrs = pd.DataFrame(scale(zcrs, axis=1), columns = ['zcrs' + str(i) for i in range(zcrs.shape[1])])
-            '''
             ffts_len = self.df.shape[1]
             self.df= self.return_ffts(ffts_len) 
 
