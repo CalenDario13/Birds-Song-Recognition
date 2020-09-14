@@ -409,18 +409,19 @@ class Audio_Processing():
             final = pd.concat([self.other_df, df], axis = 1)
             
         else:
-            
-            ffts_len = self.df.shape[1]
-            zcrs = np.apply_along_axis(lambda x: librosa.feature.spectral_rolloff(x, n_fft=2048,hop_length=2048), 1, self.df.fillna(0))
+            '''
+            zcrs = np.apply_along_axis(lambda x: librosa.feature.spectral_rolloff(x, n_fft=2048,hop_length=2048), 1, self.df)
             zcrs = zcrs.reshape(1366, zcrs.shape[2])
-            zcrs = pd.DataFrame(scale(zcrs, axis=1))
-            self.df = self.return_ffts(ffts_len)
+            zcrs = pd.DataFrame(scale(zcrs, axis=1), columns = ['zcrs' + str(i) for i in range(zcrs.shape[1])])
+            '''
+            ffts_len = self.df.shape[1]
+            self.df= self.return_ffts(ffts_len) 
 
             final = self.bin_data()
             final = scale(final, axis = 1)
             final = pd.DataFrame(final, columns = ['bin' + str(i) for i in range(final.shape[1])])
             final['centroids'] = np.apply_along_axis(self.eval_spectral_centroid, 1, self.df)
-            final = pd.concat([self.other_df, final], axis = 1)
+            final = pd.concat([self.other_df,  final], axis = 1)
          
         return final
         

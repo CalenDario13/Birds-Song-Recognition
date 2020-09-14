@@ -2,9 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from sklearn.decomposition import KernelPCA
-
-from sklearn.preprocessing import scale
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -35,7 +32,7 @@ class Classifier():
             
         return binn
     
-    def prepare_df(self, pca = False):
+    def prepare_df(self):
         
         # Fill NaN:
         dummy_df = self.df[['country','gio_not', 'season', 'call', 'sex', 'stage', 'special']]
@@ -64,36 +61,19 @@ class Classifier():
         # Split df:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.df, self.labels, test_size = 0.20, random_state = 100)
 
-        # Standardization applied on the last 3 columns: lat, lon, centroids
-        other_df_scaler = StandardScaler()
-        other_df_scaler.fit(self.X_train[['latitude', 'longitude','centroids']])
+        # Standardization
+        scaler = StandardScaler()
+        scaler.fit(self.X_train[['latitude', 'longitude','centroids']])
 
-        new_train_other = other_df_scaler.transform(self.X_train[['latitude', 'longitude','centroids']])
-        new_test_other = other_df_scaler.transform(self.X_test[['latitude', 'longitude','centroids']])
+        new_train_other = scaler.transform(self.X_train[['latitude', 'longitude','centroids']])
+        new_test_other = scaler.transform(self.X_test[['latitude', 'longitude','centroids']])
 
-        self.X_train = self.X_train.drop(columns = ['latitude', 'longitude', 'centroids'])
-        self.X_test = self.X_test.drop(columns = ['latitude', 'longitude', 'centroids'])
+        self.X_train.drop(columns = ['latitude', 'longitude', 'centroids'], inplace = True)
+        self.X_test.drop(columns = ['latitude', 'longitude', 'centroids'], inplace = True)
 
         self.X_train = pd.DataFrame(np.concatenate((self.X_train.values, new_train_other), axis=1))
         self.X_test = pd.DataFrame(np.concatenate((self.X_test.values, new_test_other), axis=1))
-
-        # PCA:
-        if pca:
-            kpca = KernelPCA(n_components=80, kernel='cosine')
-            kpca_fit = kpca.fit(self.X_train)
-            self.X_train = kpca_fit.transform(self.X_train)
-            self.X_test = kpca_fit.transform(self.X_test)
-
-            '''
-            explained_variance = np.var(kp, axis=0)
-            explained_variance_ratio = explained_variance / np.sum(explained_variance)
-
-            plt.plot(np.cumsum(explained_variance_ratio))
-            plt.xlabel('number of components')
-            plt.ylabel('cumulative explained variance')
-            '''
-
-
+            
 
     def new_evaluation_score(self, classifier, score_weights=np.linspace(0,10,10)/10):
 
@@ -132,7 +112,7 @@ class Classifier():
             class_score.columns = self.y_test.values.astype(int)
         return class_score
         
-        clf = SVC(C = best_sc)
+        clf = SVC(C = 8)
         clf.fit(self.X_train, self.y_train)
         s = clf.score(self.X_test, self.y_test)
         print('Test score is: {}'.format(s))
@@ -162,7 +142,7 @@ class Classifier():
         score = cross_val_score(vote_clf, self.X_train, self.y_train,
                                   n_jobs = -1, scoring = 'accuracy', cv = 10)
         vote_clf.fit(self.X_train, self.y_train)
-        print(self.new_evaluation_score(vote_clf))
+        #print(self.new_evaluation_score(vote_clf))
         print(np.mean(score))
         #self.class_score_df(vote_clf, self.id_class).to_csv('predictions.csv', index=False)
 
