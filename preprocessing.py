@@ -428,7 +428,13 @@ class Audio_Processing():
     def return_ffts(self, ffts_len, decibel = False, mel_scale = True):
     
         """Returns the fft in original scale or decibel. The len of the fft should be specified. 
-           Can either be decibel of Mel scale
+           Can either be decibel of Mel scale. Acts on the waveform part of df.
+           Input:
+                   ffts_len: integer len of the final array
+                   decibel: bool value , if returning in decibel the spectrum
+                   mel_scale: bool value , if returning in Mel scale the spectrum
+            Output:
+                    ffts: matrix of the transformed waveforms
         """
     
         ffts = np.empty((self.df.shape[0], ffts_len))
@@ -446,11 +452,27 @@ class Audio_Processing():
         return ffts
 
     def eval_spectral_centroid(self, freq):
+        """ Function that evaluates the spectral centroid.
+        Input:
+                freq: array of a single spectrum
+        Output:
+                centroid: flaot with the centroid of the spectrum
+
+        """
+        
         return np.sum(np.arange(self.low_cut, self.high_cut, 1)*freq)/np.sum(freq)    
 
     def bin_data(self, original_idx = False):
     
-        """Function that returns the binned data in matrix form. Original_idx returns also the indices in the original scale"""
+        """Function that returns the binned data in matrix form. Original_idx returns also the indices in the original scale.
+        Acts on the waveform part of df in matrix form.
+        Input:
+              original_idx: bool, if returning or not the original index scale
+        Output:
+                binned_data: matrix of the binned data
+                original_idx: array with the original scale if in input original_idx=True
+
+        """
         
         bins_idx = np.linspace(0, self.df.shape[1], self.bins+1).astype(int)
         binned_data = np.empty((self.df.shape[0], self.bins))
