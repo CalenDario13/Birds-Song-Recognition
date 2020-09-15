@@ -120,11 +120,22 @@ class Sun:
 
 class Cleaner():
     
+    """
+    This class adjustes some issues that came up after reading the DataFrame for the first time.
+        Input:
+            df: the pandas DataFrame containg all the info.
+    """
+    
     def __init__(self, df):
         
         self.df = df
         
     def transform_columns(self):
+        
+        """
+        This function adjusts some troubles due to wrong data types 
+        and add an extra column to check if a bird is alone in a recording
+        """
         
         self.df.elevetaion = self.df.elevetaion.apply(lambda x: int(x) if (x and x.isdigit()) else np.nan)
         self.df.latitude = self.df.latitude.apply(lambda x: np.nan if x == 'Not specified' else float(x) * np.pi/180)
@@ -135,6 +146,11 @@ class Cleaner():
         self.df.loc[self.df['common_name'] == '(?) Mallard', 'common_name'] = 'Mallard'
 
     def clean_type(self, row):
+        
+        """
+        This function check the tags present in agiven column and assign each to the corresponding list.
+            Input: a row of the pandas df.
+        """
         
         # Define the columns domain:
         
@@ -166,6 +182,16 @@ class Cleaner():
     
     def transform_lst(self, lst):
         
+        """
+        Given the length of the list the function decides what to do with it, 
+        ongly if the list is made of only one arguments it is transformed in string.
+        Otherwise, it returns nan.
+            Input: 
+                lst: a list of strings (tags) of given ctegory (see the clean_type function for the classes)
+            output:
+                new: a string containing the tag
+        """
+        
         if len(lst) > 1:
             new = np.NaN
             return new
@@ -177,6 +203,11 @@ class Cleaner():
             return new
     
     def add_type_columns(self):
+        
+        """
+        This function analyze tags in type column, for each row 
+        and generates a column for each tag with the given tag if exists or nan
+        """
         
         tags = defaultdict(list)
         for row in tqdm(self.df['type'], desc = 'Generate type columns'):
@@ -297,7 +328,16 @@ class Cleaner():
         self.df.insert(10,"season",season_lis)
 
     def binning_elev(self, el):
-  
+        
+        """
+        This function helps to transform elevation in a dummy variable, 
+        for each passed row it determinates in which bin the value is.
+            Input:
+                el: an int which represents the elevation
+            Output:
+                binn: a string representing the given bin
+        """
+        
         if el <= 240:
             binn = 'bassa'
         elif 240 < el <= 500:
@@ -308,6 +348,12 @@ class Cleaner():
         return binn
    
     def generate_final_db(self):
+        
+        """
+        This function calls all the previous ones and adjusts the DataFrame.
+            output:
+                df: the cleaned df
+        """
  
         self.add_type_columns()
         self.transform_columns()
@@ -319,6 +365,11 @@ class Cleaner():
         return self.df
     
 class Audio_Processing():
+    
+    """
+    This class works only on the waveform and transforms it thanks to Fourier transform 
+    or MCCS, depending on what we want.
+    """
     
     def __init__(self, df, quality_rate, hop_length, bins, low_cut, high_cut):
         
@@ -376,9 +427,9 @@ class Audio_Processing():
         
     def return_ffts(self, ffts_len, decibel = False, mel_scale = True):
     
-        '''Returns the fft in original scale or decibel. The len of the fft should be specified. 
+        """Returns the fft in original scale or decibel. The len of the fft should be specified. 
            Can either be decibel of Mel scale
-        '''
+        """
     
         ffts = np.empty((self.df.shape[0], ffts_len))
         wf_matrix = self.df.values
@@ -399,7 +450,7 @@ class Audio_Processing():
 
     def bin_data(self, original_idx = False):
     
-        '''Function that returns the binned data in matrix form. Original_idx returns also the indices in the original scale'''
+        """Function that returns the binned data in matrix form. Original_idx returns also the indices in the original scale"""
         
         bins_idx = np.linspace(0, self.df.shape[1], self.bins+1).astype(int)
         binned_data = np.empty((self.df.shape[0], self.bins))
@@ -415,6 +466,15 @@ class Audio_Processing():
             return binned_data
     
     def transform_df(self, mel = False):
+        
+        """
+        This function get the orginal waveform and trasform it to mels if mel = True or 
+        if mel = False it does the fourier tansformation, bin the data and scale them, then adds
+        also the centroids.
+        
+            Output:
+                final: a dataframe with the the tansformed columns (concerning only the waveform).
+        """
         
         if mel:
             tqdm.pandas()

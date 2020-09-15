@@ -32,7 +32,7 @@ if __name__ == '__main__':
             birds_link = [link[:-1] for link in birds_link]
     else:
         top = top_ten(BASE, PATH_FILE)   
-        birds_link = top.top_birds()
+        birds_link = top.top_species()
 
     # Get Data:
 

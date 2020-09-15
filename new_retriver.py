@@ -25,9 +25,9 @@ from scipy.signal import find_peaks
 import librosa
 
 def thread_manager(function):
-    '''
+    """
     This is a wrapper and allows to run in multithread any desired function.
-    '''
+    """
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=function, args=[item for item in args], kwargs=kwargs)
         thread.start()
@@ -35,19 +35,19 @@ def thread_manager(function):
     return wrapper
 
 def process_manager(function, lst, n_core = 5):
-    '''
+    """
     This function allows to run any function in multiprocessing.
-    '''
+    """
     with mp.Pool(n_core) as p:
         list(tqdm(p.imap(function, lst), total = len(lst)))
 
 
 class top_ten():
     
-    '''
+    """
     This class is developed to dive into the taxonomy structure in order to find the top 10 species
     with the highest number of recordings.
-    '''
+    """
     
     def __init__(self, base, path):
         
@@ -56,12 +56,12 @@ class top_ten():
         
     def establish_connection(self, link_path, n = 10000, t = 0.5):
         
-        '''
+        """
         It allows to establish connection with a given web-page and if a failure occurs it tries
         n times every t seconds to get the page. It returns the soup of the web-page.
         
             Output: the soup (got by BeautifulSoup)
-        '''
+        """
         
         session = requests.Session() 
         retry = Retry(total = n, backoff_factor = t)
@@ -77,10 +77,10 @@ class top_ten():
     
     def get_info(self, soup):
         
-        '''
+        """
         This function is designed to get anuwhere the name of the bird/species/anyelse,
         the number of recordings for it and the link to get it.
-        '''
+        """
         
         name = soup.find('a').text.strip()
         score = int(soup.find('span', {'class': 'recording-count'}).text.strip())
@@ -90,12 +90,12 @@ class top_ten():
     
     def get_top_n(self, n, sub_soup):
         
-        '''
+        """
         This function stores the given infromation contained in the sub_soup 
         and returns the top n elements og the given group.
         
             Output: a link as str
-        '''
+        """
         
         rnk = []
         heapq.heapify(rnk)
@@ -118,11 +118,11 @@ class top_ten():
         
     def top_order(self):
         
-        '''
+        """
         This function returns the top 10 orders with more recordings.
         
             Output: a list with ten order links
-        '''
+        """
         
         path_url = '/explore/taxonomy'
         soup = self.establish_connection(path_url)
@@ -133,11 +133,11 @@ class top_ten():
         
     def top_families(self):
         
-        '''
+        """
         This function returns for each given orderthe family with the most recordings.
         
             Output: a list with ten families links
-        '''
+        """
         
         link_lst = self.top_order()
         
@@ -153,11 +153,11 @@ class top_ten():
 
     def top_genus(self):
         
-        '''
+        """
         This function returns for eacch given family the genus with the most recordings.
         
             Output: a list with ten genus links
-        '''
+        """
         
         link_lst = self.top_families()
         
@@ -173,11 +173,11 @@ class top_ten():
     
     def top_species(self):
         
-        '''
+        """
         This function returns for eacch given genus the species with the most recordings.
         
-            Output: a list with ten species links
-        '''
+            Output: a list with ten species links_path (NOT compelte link).
+        """
         
         link_lst = self.top_genus()
         
@@ -199,9 +199,9 @@ class top_ten():
         
 class retriver():
     
-    '''
+    """
     This class is developed to navigate in the website and retrive information finally sotred in a Dataframe.
-    '''
+    """
     
     def __init__(self, base, path_file, path_parquet, time_len, quality_rate, frame_len, hop_len):
         
@@ -215,12 +215,13 @@ class retriver():
       
     def connect(self, url, n = 100000000, t = 2):
         
-        '''
+        """
         It allows to establish connection with a given web-page and if a failure occurs it tries
         n times every t seconds to get the page. It returns the content of the web-page.
-        
+            Input:
+                url: compelte url to whatevere
             Output: the content of the given web page
-        '''
+        """
         
         session = requests.Session() 
         retry = Retry(total = n, backoff_factor = t)
@@ -235,11 +236,12 @@ class retriver():
     
     def get_table(self, url):
         
-        '''
+        """
         This function get as input a link to a webpage containg dtabase and scrape it.
-            
+            Input:
+                url: the COMPLETE url to get the table
             Output: a pandas DataFrame with the raw info
-        '''
+        """
         
         cont = self.connect(url)
         soup = bs(cont, "html5lib")
@@ -296,11 +298,14 @@ class retriver():
 
     def cut_longer_audio (self, wave, sample_rate):
         
-        '''
+        """
         This function reduces the dimension of recordings bigger than a given threshold.
-            
+            Input:
+                wave. a numpy array which contains the waveform
+                sample_rate: the sampel rate as int
+                
             Output: a waveform of a given length as numpy array
-        '''
+        """
         
         rms_wave = librosa.feature.rms(wave, frame_length = self.frame_len, hop_length = self.hop_len)[0]
         peak_pos = find_peaks(rms_wave)[0]
@@ -330,12 +335,16 @@ class retriver():
     @thread_manager
     def get_song(self, url, audio_lst):
         
-        '''
+        """
         This function extract the waveform from recordings.
         It is designed to work in mmultithread (thanks to the wrapper.
             
+            Input:
+                url: a compelte url from which get the song.
+                audio_lst: a list where to save the audioform (it will be tarnsformed in df).
+            
             Output: a numpy arry which contains the waveform
-        '''
+        """
         
         data = self.connect(url)
         
@@ -365,13 +374,17 @@ class retriver():
     @thread_manager        
     def get_gps_and_back(self, url_gps, gps_back_dic):
         
-        '''
+        """
         This function is developed to get the gps information about each row of the DataFrame 
         and which birds are also in the audio with the main one.
         It is developed to work un multithreading thanks to the wrapper.
-        
-            Output: it appends xcid, latiute, longitude and background directly into the dictioanry
-        '''
+            
+            Input:
+                url_gps: a string containing the COMPLETE url to get gps coordinates.
+                gps_back_di: a dictionary where to save the retrived info.
+            
+            Output: it appends xcid, latiute, longitude and background directly into the dictioanry.
+        """
         
         data = self.connect(url_gps)
         soup = bs(data, 'html.parser')
@@ -418,14 +431,15 @@ class retriver():
     
     def clean_rows(self, df):
         
-        '''
+        """
         This function helps to drop rows that contains unuseful or difficult info to be used.
-        
+            Input:
+                df: the chunk of df downloaded form the current page to be clean
             Output:
                 idx_remove: a list od indexes to drop in the DataFrame
                 common: a list with the birds' common names
                 scientific: a list with the birds' scientific names
-        '''
+        """
         
         idx_remove = []
         common = []
@@ -468,9 +482,13 @@ class retriver():
     
     def to_parquet(self, df, name):
         
-        '''
+        """
         This function save the final DataFrame in parquet format into a fiven destination path
-        '''
+            
+            Input:
+                df: the final dataframe with all the rows for a given species
+                name: a stiring with the name of the species
+        """
         
         path_parquet_bird = ''.join([self.path_parquet, name, '.parquet'])
 
@@ -479,12 +497,14 @@ class retriver():
     
     def get_data(self, link_path):
         
-        '''
+        """
         This function calls the previous one and integrets them in order to create the DataFrame.
         After getting the DataFrame, it modifies it in order to make it readable and clean.
         
-         Output: it concatenate a partial DataFrame to the final one.
-        '''
+            Input:
+                link_path: a stirng that represents ONLY the path to a given species (NOT the base url)
+            Output: it concatenate a partial DataFrame to the final one.
+        """
         
         # Find last page to parse:
             
@@ -555,7 +575,7 @@ class retriver():
             chunk = chunk.merge(audio_df, how = 'inner', on = 'id')
             
             counter += len(chunk)
-            '''
+            """
             # Save CSV:
                 
             path_csv = ''.join([self.path_file, '.csv'])  
@@ -564,7 +584,7 @@ class retriver():
                 chunk.to_csv(path_csv, mode = 'w', header = True, index = False)
             else:
                 chunk.to_csv(path_csv, mode = 'a', header = False, index = False)
-            '''
+            """
             # Add to my_df:
                 
             if len(my_df) == 0:
@@ -578,9 +598,9 @@ class retriver():
            
     def merge_parquets(self):
         
-        '''
+        """
         This function merge all the parquets files (one for each species) in a bigger one.
-        '''
+        """
         
         parquet_lst = glob(''.join([self.path_parquet, '*.parquet']))
         pq_tables = []
