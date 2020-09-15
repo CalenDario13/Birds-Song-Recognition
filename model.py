@@ -135,7 +135,13 @@ class Classifier():
 
         """The new score takes into account the position in the sorted predicted list
         of the true label. According to its position it gives a score in [0,1], where
-        0 is when the true label is in the last position and 1 when in the first."""
+        0 is when the true label is in the last position and 1 when in the first.
+        Input:
+               classifier: the classifier used for the model
+               score_weights: array as  weigths to compute the score
+        Output:
+                new_score: float indicating the personalized score
+        """
 
         pred_probabilities = classifier.predict_proba(self.X_test)
         new_score = 0
@@ -151,7 +157,13 @@ class Classifier():
 
         """This function returns a dataframe where each column is associated to a datapoint
         with name of the column corresponding to the true label. Each column represents the
-        sorted classes according to the probability output of the classifier."""
+        sorted classes according to the probability output of the classifier.
+        Input:
+                classifier: the classifier used for the model
+                id_class_map: dict that maps the classes to their respective id
+        Output:
+                class_score: dataframe with the predictions in the format described above
+        """
 
         pred_probabilities = classifier.predict_proba(self.X_test.values)
         index = np.array(list(id_class_map.keys()))
@@ -168,15 +180,11 @@ class Classifier():
             class_score.columns = self.y_test.values.astype(int)
         return class_score
         
-        clf = SVC(C = 8)
-        clf.fit(self.X_train, self.y_train)
-        s = clf.score(self.X_test, self.y_test)
-        print('Test score is: {}'.format(s))
 
     def test_model(self, fit):
         
         """
-        This function return the score (AUC) on the test set.
+        This function return the score (accuracy) on the test set.
             Input:
                 fit: fitted model
             Output:
@@ -201,7 +209,7 @@ class Classifier():
         
         """
         This function after calling the function to adjust DataFrame,
-        returns the score (AUC) on the train set and our personal score.
+        returns the score (accuracy) on the train set and our personal score.
         
         """
         
