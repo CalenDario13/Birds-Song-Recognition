@@ -339,7 +339,7 @@ class retriver():
                 
             score = row.Actions
             
-            if seen == 'yes' and (row._2 != '(?) Identity unknown' or row._2 != 'Soundscape') and row.Length < 180:
+            if seen == 'yes' and (row._2 != '(?) Identity unknown' or row._2 != 'Soundscape') and row.Length < 120:
                 
                 # Split common name from scientific:
                 

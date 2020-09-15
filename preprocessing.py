@@ -296,11 +296,26 @@ class Cleaner():
                 season_lis.append(s)
         self.df.insert(10,"season",season_lis)
 
+    def binning_elev(self, el):
+  
+        if el <= 240:
+            binn = 'bassa'
+        elif 240 < el <= 500:
+            binn = 'media'
+        else:
+            binn = 'alta'
+            
+        return binn
+   
     def generate_final_db(self):
+ 
         self.add_type_columns()
         self.transform_columns()
+        self.df['elevetaion'] = self.df.elevetaion.apply(lambda x: self.binning_elev(x))
+        self.df = self.df.rename({'elevetaion':'elevation'}, axis=1)
         self.calc_gio_not()
         self.calc_season()
+       
         return self.df
     
 class Audio_Processing():
@@ -414,7 +429,7 @@ class Audio_Processing():
 
             final = self.bin_data()
             final = scale(final, axis = 1)
-            final = pd.DataFrame(final, columns = ['bin' + str(i) for i in range(final.shape[1])])
+            final = pd.DataFrame(final, columns = ['bin_' + str(i) for i in range(final.shape[1])])
             final['centroids'] = np.apply_along_axis(self.eval_spectral_centroid, 1, self.df)
             final = pd.concat([self.other_df,  final], axis = 1)
          

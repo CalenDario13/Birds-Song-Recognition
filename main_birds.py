@@ -60,5 +60,5 @@ if __name__ == '__main__':
     new_df = audio_processing.transform_df()
     
     classifier = Classifier(new_df)
-    classifier.test_model()
-   
+    classifier.evaluate_model()
+    
