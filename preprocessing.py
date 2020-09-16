@@ -402,6 +402,16 @@ class Audio_Processing():
         
     def fft_filter(self, signal):
 
+        """ 
+        The function use the fast fourier transform to obtain the frequencies power spectrum for each audio, 
+        then it define a threshold given by average + standard deviation of the power spectrum to filter 
+        some noise from the audio.
+        Input:
+                signal: the audio wave form 
+        Output:
+                f_filt: the filtered signal
+        """
+
         n = len(self.tempo) 
         
         # Calculate Power Spectrum:  
@@ -422,6 +432,15 @@ class Audio_Processing():
         return f_filt 
       
     def get_mel(self, rows):
+
+        """
+        The function generates a set of MEL cepstral coefficients and the 
+        Delta-spectral cepstral coefficients
+        Input:
+                rows: the audio signal once preprocessed
+        Output:
+                mfcc_concat: a numpy array where are concatenated mfcc and delta-scc
+        """
         
         # Generate MEL and Delta:
         signal = np.array(rows, dtype = np.float32) 
@@ -469,7 +488,6 @@ class Audio_Processing():
                 freq: array of a single spectrum
         Output:
                 centroid: flaot with the centroid of the spectrum
-
         """
         
         return np.sum(np.arange(self.low_cut, self.high_cut, 1)*freq)/np.sum(freq)    
