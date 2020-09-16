@@ -9,6 +9,9 @@ import librosa
 from sklearn.preprocessing import scale
 
 class Sun:
+    """This class is made up of several functions, 
+    the main ones take as input latitude,longitude and a date and calculate the sunrise and sunset times, 
+    while the third takes as input a date which is a string and returns a datatime."""
 
     def getSunriseTime( self, data, coords ):
         return self.calcSunTime( data,coords, True )
@@ -17,7 +20,6 @@ class Sun:
         return self.calcSunTime( data,coords, False )
 
     def getCurrentUTC( self, data):
-        data = data.split('-')
         if data[2] == '00':
             data[2] = '01'
         data = '-'.join(data)
@@ -230,6 +232,9 @@ class Cleaner():
 
 
     def calc_gio_not(self):
+        """This function takes as input the date, time, latitude and longitude of the observation of a bird,
+        recalls the functions of the sun class to calculate the time of sunrise and sunset and checks if the observation time is between the two.
+        the function returns a string 'day' if it is true otherwise it returns the string 'night'."""
         gio_not = []
         sun = Sun()
         for oss in tqdm(self.df.iloc[:,0:15].itertuples(), desc = 'Calculate day-night', total=len(self.df)):
@@ -284,6 +289,8 @@ class Cleaner():
     
 
     def emisphere(self,lat):
+        """This function takes as input the latitude of the place where the bird was observed 
+        if it is greater than 0 return that was observed in the northern hemisphere otherwise in the southern one."""
         if lat >= 0:
             e = 'north'
         else:
@@ -291,6 +298,9 @@ class Cleaner():
         return e
 
     def season(self,data, HEMISPHERE):
+        """This function takes date and hemisphere as input.
+        From the date it extracts the day and month in order to calculate 
+        in which season of the year the observation took place."""
         
         seasons = {0: 'spring',
                    1: 'summer',
@@ -315,6 +325,7 @@ class Cleaner():
         return seasons[se]
 
     def calc_season(self):
+        "Final function that uses the previous two to save season information in the DataFrame"
         season_lis = []
         for oss in tqdm(self.df.iloc[:,0:16].itertuples(), desc = 'Calculate Season', total=len(self.df)):
             date = oss.date
