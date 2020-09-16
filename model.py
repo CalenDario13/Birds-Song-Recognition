@@ -133,7 +133,8 @@ class Classifier():
     
     def new_evaluation_score(self, classifier, score_weights=np.linspace(0,10,10)/10):
 
-        """The new score takes into account the position in the sorted predicted list
+        """
+        The new score takes into account the position in the sorted predicted list
         of the true label. According to its position it gives a score in [0,1], where
         0 is when the true label is in the last position and 1 when in the first.
         Input:
