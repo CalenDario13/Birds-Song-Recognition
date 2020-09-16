@@ -20,6 +20,7 @@ class Sun:
         return self.calcSunTime( data,coords, False )
 
     def getCurrentUTC( self, data):
+        data = data.split('-')
         if data[2] == '00':
             data[2] = '01'
         data = '-'.join(data)
